@@ -315,13 +315,15 @@ async def stream_upload_to_temp(upload_file, temp_path: str, max_file_size_mb: O
                 break
             total += len(chunk)
             if total > max_bytes:
-                raise HTTPException(
+                http_exc = HTTPException(
                     status_code=413,
                     detail=(
                         f"File too large ({total / (1024 * 1024):.1f}MB). "
                         f"Maximum allowed: {max_file_size_mb}MB."
                     ),
                 )
+                http_exc.uploaded_bytes = total
+                raise http_exc
             out.write(chunk)
     return total
 

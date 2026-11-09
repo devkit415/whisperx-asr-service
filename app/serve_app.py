@@ -452,9 +452,14 @@ class ASRIngress:
                     except OSError:
                         pass
                 temp_audio_path = None
+                uploaded = getattr(exc, "uploaded_bytes", None)
+                if uploaded is None:
+                    import re
+                    match = re.search(r"File too large \\((\\d+(?:\\.\\d+)?)MB\\)", str(exc.detail))
+                    uploaded = float(match.group(1)) * 1024 * 1024 if match else 0
                 return create_openai_error(
-                    exc.status_code,
-                    exc.detail,
+                    413,
+                    f"File too large ({uploaded / (1024 * 1024):.1f}MB). Maximum: {MAX_FILE_SIZE_MB}MB",
                     code="file_too_large",
                 )
 
